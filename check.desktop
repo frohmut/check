@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Check
+Comment=Checker
+Exec=/home/p/check/check.py
+TryExec=/home/p/check/check.py
+Type=Application
+X-LightDM-DesktopName=Check
+DesktopNames=Check
