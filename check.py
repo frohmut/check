@@ -28,6 +28,11 @@ class Check:
 
     def __init__(self, testset):
 
+        self._root = Tkinter.Tk()
+
+        label = Tkinter.Label(text='Test')
+        label.grid(row=0)
+
         # 'the_end' dient zum Anzeigen des Resultates nach dem letzten Test
         self.the_end = False
 
@@ -63,19 +68,32 @@ class Check:
         self.info = Tkinter.Label(text='')
         self.info.grid(row=5, column=3)
 
+        q = Tkinter.Button(text='Ende')
+        q.grid(row=8, column=4)
+        q['command'] = lambda: sys.exit(0)
+
+        j = "Start-Test: " + time.strftime("%Y-%m-%d %H:%M", time.localtime())
+        t = Tkinter.Label(text=j)
+        t.grid(row=9, column=4)
+
     def check_answer(self):
         res = self.entry.get()
         if res == self.current[0]:
             self.info['text'] = res + ' war richtig'
             self.cnt_correct = self.cnt_correct + 1
-            # self.say(res, "en")
-            # self.say(res + " war richtig", "de")
+            self.say(res, "en")
+            self.say(" war richtig", "de")
         else:
-            self.tests.append(self.current)
+            # self.tests.append(self.current)
+            self.tests = [ self.current ] + self.tests
             self.min_correct = self.min_correct + 1
             self.info['text'] = '>' + res + '< war leider falsch. ' +\
                 self.current[1] + ' = ' +\
                 self.current[0]
+            self._root.update()
+            self.say("Leider falsch. Richtig wäre ", "de")
+            self.say(self.current[0], "en")
+            self.say("Weiter geht's.", "de")
 
     def say(self, texts, langs):
         fn = "/tmp/test.mp3"
@@ -83,6 +101,13 @@ class Check:
         g.save(fn)
         p = vlc.MediaPlayer(fn)
         p.play()
+        played = False
+        while True:
+            if p.get_position() > 0:
+                played = True
+            if played and p.is_playing() == 0:
+                break
+
 
     def show_test(self):
         self.test['text'] = self.current[1]
@@ -129,24 +154,14 @@ class Check:
 
         done = str(self.cnt_q) + "/" + str(self.max_check) + "     " + str(self.cnt_correct) + "/" + str(self.min_correct)
         self.done['text'] = done
-
-root = Tkinter.Tk()
-
-label = Tkinter.Label(text='Test')
-label.grid(row=0)
+    def mainloop(self):
+        self._root.mainloop()
 
 c = Check(testl)
 
-q = Tkinter.Button(text='Ende')
-q.grid(row=8, column=4)
-q['command'] = lambda: sys.exit(0)
-
-j = "Start-Test: " + time.strftime("%Y-%m-%d %H:%M", time.localtime())
-t = Tkinter.Label(text=j)
-t.grid(row=9, column=4)
+c.mainloop()
 
 
 # root.withdraw()
 
-root.mainloop()
 
