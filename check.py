@@ -9,6 +9,11 @@ import subprocess
 import getpass
 import time
 
+
+import cv2
+import pygame.camera
+import pygame.image
+
 import gtts
 import vlc
 
@@ -61,6 +66,8 @@ class Check:
         self.cnt_correct = 0
         self.cnt_q = -1
 
+        self.first_answer = True
+
         done = str(self.cnt_q) + "/" + str(self.max_check) + "     " + str(self.cnt_correct) + "/" + str(self.min_correct)
         self.done = Tkinter.Label(text=done)
         self.done.grid(row=4, columns=3)
@@ -76,7 +83,43 @@ class Check:
         t = Tkinter.Label(text=j)
         t.grid(row=9, column=4)
 
+    def check_face(self):
+
+        # get snapshot
+
+        cam.start()
+        img = cam.get_image()
+        cam.stop()
+        fname = "check_" + user + "_" + time.strftime("%Y-%m-%d-%H_%M", time.localtime())
+        pygame.image.save(img, fname + ".png")
+
+        image = cv2.imread(fname + ".png")
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        faces = faceCascade.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(30, 30),
+            flags = cv2.CASCADE_SCALE_IMAGE
+        )
+        print("faces: " + str(len(faces)))
+        if len(faces) > 0:
+            for (x, y, w, h) in faces:
+                cv2.rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+            cv2.imwrite(fname + "_faces.png", image)
+        return len(faces) > 0
+
     def check_answer(self):
+        if self.first_answer:
+            ok = self.check_face()
+            if ok:
+                self.first_answer = False
+            else:
+                self.info['text'] = 'Bitte in die Kamera schauen'
+                return True
+
         res = self.entry.get()
         if res == self.current[0]:
             self.info['text'] = res + ' war richtig'
@@ -94,6 +137,7 @@ class Check:
             self.say("Leider falsch. Richtig wäre ", "de")
             self.say(self.current[0], "en")
             self.say("Weiter geht's.", "de")
+        return False
 
     def say(self, texts, langs):
         fn = "/tmp/test.mp3"
@@ -132,7 +176,9 @@ class Check:
 
         # Check der Antwort
         if self.cnt_q >= 0:
-            self.check_answer()
+            repeat = self.check_answer()
+            if repeat:
+                return
 
         # Neuer Test
         self.cnt_q = self.cnt_q + 1
@@ -157,10 +203,17 @@ class Check:
     def mainloop(self):
         self._root.mainloop()
 
+# Create the haar cascade
+cascPath = "/home/p/check/haarcascade_frontalface_default.xml"
+faceCascade = cv2.CascadeClassifier(cascPath)
+pygame.camera.init()
+cam = pygame.camera.Camera(pygame.camera.list_cameras()[0])
+
 c = Check(testl)
 
 c.mainloop()
 
+pygame.camera.quit()
 
 # root.withdraw()
 
