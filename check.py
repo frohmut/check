@@ -34,6 +34,7 @@ class Check:
     def __init__(self, testset):
 
         self._root = Tkinter.Tk()
+        self.speak = True
 
         label = Tkinter.Label(text='Test')
         label.grid(row=0)
@@ -124,8 +125,9 @@ class Check:
         if res == self.current[0]:
             self.info['text'] = res + ' war richtig'
             self.cnt_correct = self.cnt_correct + 1
-            self.say(res, "en")
-            self.say(" war richtig", "de")
+            if self.speak:
+                self.say(res, "en")
+                self.say(" war richtig", "de")
         else:
             # self.tests.append(self.current)
             self.tests = [ self.current ] + self.tests
@@ -134,13 +136,14 @@ class Check:
                 self.current[1] + ' = ' +\
                 self.current[0]
             self._root.update()
-            self.say("Leider falsch. Richtig wäre ", "de")
-            self.say(self.current[0], "en")
-            self.say("Weiter geht's.", "de")
+            if self.speak:
+                self.say("Leider falsch. Richtig wäre ", "de")
+                self.say(self.current[0], "en")
+                self.say("Weiter geht's.", "de")
         return False
 
     def say(self, texts, langs):
-        fn = "/tmp/test.mp3"
+        fn = "check_speak.mp3"
         g = gtts.gTTS(text=texts, lang=langs, slow=False)
         g.save(fn)
         p = vlc.MediaPlayer(fn)
@@ -155,9 +158,10 @@ class Check:
 
     def show_test(self):
         self.test['text'] = self.current[1]
-        self.test['text'] = ''
         self.check['text'] = 'Check'
-        self.say(self.current[1], "de")
+        if self.speak:
+            self.test['text'] = ''
+            self.say(self.current[1], "de")
 
     def on_check(self):
 
