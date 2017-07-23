@@ -8,6 +8,7 @@ import random
 import subprocess
 import getpass
 import time
+import psutil
 
 
 import cv2
@@ -204,8 +205,19 @@ class Check:
 
         done = str(self.cnt_q) + "/" + str(self.max_check) + "     " + str(self.cnt_correct) + "/" + str(self.min_correct)
         self.done['text'] = done
+
+    def battery_check(self):
+        b = psutil.sensors_battery()
+        if b.power_plugged == False:
+            minsleft = b.secsleft / 60.0
+            if minsleft < 5.0:
+                subprocess.Popen(['notify-send', "Batterie hält noch " + str(minsleft) + " Minuten" ])
+        self._root.after(60 * 1000, self.battery_check)
+
+
     def mainloop(self):
-        self._root.mainloop()
+        self.battery_check()
+        Tkinter.mainloop()
 
 # Create the haar cascade
 cascPath = "/home/p/check/haarcascade_frontalface_default.xml"
